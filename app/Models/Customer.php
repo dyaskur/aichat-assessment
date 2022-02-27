@@ -19,7 +19,7 @@ class Customer extends Authenticatable
      */
     protected $fillable
         = [
-            'name',
+            'first_name',
             'email',
             'password',
         ];
@@ -44,4 +44,10 @@ class Customer extends Authenticatable
         = [
             'email_verified_at' => 'datetime',
         ];
+
+
+    public function transactions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PurchaseTransaction::class);
+    }
 }

@@ -22,5 +22,47 @@ class Promotion extends Model
             'max_redemption_per_user_count',
         ];
 
+    //scopes
+    public function scopeActive($query)
+    {
+        return $query->where('start_date', '<=', now())
+            ->where('end_date', '>=', now());
+    }
 
+    //custom methods
+    public function findByCode($code)
+    {
+        return $this->active()->where('code', $code)->first();
+    }
+
+    public function eligibleCheck($customer): bool
+    {
+        $eligible             = true;
+        $customer_transaction = $customer->transactions(); //init customer transaction queries
+
+        if ($this->last_transaction_days > 0) {
+            //when last_transaction_days more than zero, transaction must be more than last_transaction_days
+            $customer_transaction = $customer_transaction->where('created_at', '>=', now()->subDays($this->last_transaction_days));
+        }
+
+        $transactionCount = $customer_transaction->count();
+        if ($this->min_transaction_count > 0 && $eligible) {
+            $eligible = $customer_transaction->count() >= $this->min_transaction_count;
+        }
+        if ($this->min_transaction_total > 0 && $eligible) {
+            $eligible = $customer_transaction->sum('total_spent') >= $this->min_transaction_total;
+        }
+        if ($this->max_redemption_per_user_count > 0 && $eligible) {
+            $eligible = $customer->transactions()->hasPromotion($this->id)->count() <
+                $this->max_redemption_per_user_count;
+        }
+
+        return $eligible;
+    }
+
+    //relationship
+    public function codes(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PromotionCode::class);
+    }
 }
