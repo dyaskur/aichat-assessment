@@ -45,7 +45,6 @@ class Promotion extends Model
             $customer_transaction = $customer_transaction->where('created_at', '>=', now()->subDays($this->last_transaction_days));
         }
 
-        $transactionCount = $customer_transaction->count();
         if ($this->min_transaction_count > 0 && $eligible) {
             $eligible = $customer_transaction->count() >= $this->min_transaction_count;
         }

@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -45,9 +47,46 @@ class Customer extends Authenticatable
             'email_verified_at' => 'datetime',
         ];
 
+    //relationships
 
-    public function transactions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    /**
+     * @return HasMany
+     */
+    public function transactions(): HasMany
     {
         return $this->hasMany(PurchaseTransaction::class);
+    }
+
+    /**
+     * @return HasOne
+     */
+    public function lockedCode(): HasOne
+    {
+        return $this->hasOne(PromotionCode::class, 'locked_for')->where('locked_until', '>=', now());
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function lockedCodes(): HasMany
+    {
+        return $this->hasMany(PromotionCode::class, 'locked_for')->where('locked_until', '>=', now());
+    }
+
+    //custom method
+
+    public function findLockedPromotion(Promotion $promotion): PromotionCode|null
+    {
+        return $this->lockedCodes()->where('promotion_id', $promotion->id)->first();
+    }
+
+    //mutator
+
+    /**
+     * @return string
+     */
+    public function getFullNameAttribute(): string
+    {
+        return $this->first_name.' '.$this->last_name;
     }
 }

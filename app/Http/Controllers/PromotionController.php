@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\PromotionCheckRequest;
 use App\Models\Promotion;
+use App\Models\PromotionCode;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,7 +30,7 @@ class PromotionController extends Controller
         $isEligible = $promotion->eligibleCheck($customer);
         DB::beginTransaction();
         try {
-            $promotionCode = $promotion->codes()->available()->sharedLock()->first();
+            $promotionCode = $promotion->codes()->available()->lockForUpdate()->first();
             $promotionCode->lockForCustomer($customer);
             DB::commit();
         } catch (Exception $e) {
@@ -46,4 +47,15 @@ class PromotionController extends Controller
 
         return response()->json(['isEligible' => $isEligible, 'code' => $promotionCode]);
     }
+
+    //
+    public function test()
+    {
+        //test pessimistic lock
+        $promotionCode = PromotionCode::query()->find(1);
+
+
+        return response()->json([ 'code' => $promotionCode]);
+    }
+
 }

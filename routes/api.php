@@ -19,4 +19,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::post('/check', [\App\Http\Controllers\PromotionController::class, 'eligibleCheck']);
+Route::post('/redeem', [\App\Http\Controllers\PromotionController::class, 'eligibleCheck']);
+Route::post('/test', [\App\Http\Controllers\PromotionController::class, 'test']);
 

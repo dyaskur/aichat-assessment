@@ -26,7 +26,7 @@ class PromotionCode extends Model
     public function scopeAvailable($query)
     {
         return $query->where(function($query) {
-            return $query->whereNull('locked_for')->orWhere('locked_until', '<', now());
+            return $query->whereNull('locked_until')->orWhere('locked_until', '<', now());
         });
     }
 
