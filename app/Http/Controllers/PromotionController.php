@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PromotionCheckRequest;
+use App\Http\Requests\ValidatePhotoRequest;
 use App\Models\Promotion;
 use App\Models\PromotionCode;
 use Exception;
@@ -12,11 +13,6 @@ use Illuminate\Support\Facades\DB;
 
 class PromotionController extends Controller
 {
-    //
-    public function index()
-    {
-        return view('promotion.index');
-    }
 
     public function eligibleCheck(PromotionCheckRequest $request): JsonResponse
     {
@@ -49,13 +45,44 @@ class PromotionController extends Controller
     }
 
     //
-    public function test()
+    public function claim(ValidatePhotoRequest $request): JsonResponse
+    {
+        $customer  = $request->customer();
+        $promotion = (new Promotion)->findByCode($request->code);
+
+        if (!$promotion) {
+            return response()->json(['message' => 'Invalid/expired promotion code', "code" => $request->code], 422);
+        }
+        $code = $promotion->findCodeByLockedFor($customer->id);
+
+
+        DB::beginTransaction();
+        try {
+            $isRecognized = $request->isRecognized();
+            $code->claimForCustomer($customer);
+
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            return response()->json(
+                [
+                    'message' => env("APP_DEBUG") ? $e->getMessage() : 'Internal server error',
+                ],
+                500
+            );
+        }
+
+        return response()->json(['is_recognized' => $isRecognized, 'code' => $code]);
+    }
+
+    //
+    public function test(): JsonResponse
     {
         //test pessimistic lock
         $promotionCode = PromotionCode::query()->find(1);
 
-
-        return response()->json([ 'code' => $promotionCode]);
+        return response()->json(['code' => $promotionCode]);
     }
 
 }

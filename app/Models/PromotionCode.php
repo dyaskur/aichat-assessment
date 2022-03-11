@@ -16,6 +16,7 @@ class PromotionCode extends Model
             'locked_for',
             'locked_until',
             'promotion_id',
+            'claimed_for',
         ];
 
     public function promotion(): BelongsTo
@@ -35,6 +36,13 @@ class PromotionCode extends Model
         $this->update([
                           'locked_for'   => $user->id,
                           'locked_until' => now()->addMinutes($expiryInMinutes),
+                      ]);
+    }
+
+    public function claimForCustomer(Customer $user): void
+    {
+        $this->update([
+                          'claimed_for' => $user->id,
                       ]);
     }
 }

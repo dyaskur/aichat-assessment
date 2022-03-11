@@ -14,11 +14,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+Route::middleware('auth:sanctum')->get('/user', function(Request $request) {
     return $request->user();
 });
 
-Route::post('/check', [\App\Http\Controllers\PromotionController::class, 'eligibleCheck']);
-Route::post('/redeem', [\App\Http\Controllers\PromotionController::class, 'eligibleCheck']);
-Route::post('/test', [\App\Http\Controllers\PromotionController::class, 'test']);
+Route::post('/check', [\App\Http\Controcllers\PromotionController::class, 'eligibleCheck']);
+Route::post('/claim', [\App\Http\Controllers\PromotionController::class, 'claim']);
 

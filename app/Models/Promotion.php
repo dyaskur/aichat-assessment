@@ -35,6 +35,13 @@ class Promotion extends Model
         return $this->active()->where('code', $code)->first();
     }
 
+
+    public function findCodeByLockedFor(int $customerId)
+    {
+        return $this->codes()->where('locked_for', $customerId)->first();
+    }
+
+
     public function eligibleCheck($customer): bool
     {
         $eligible             = true;
