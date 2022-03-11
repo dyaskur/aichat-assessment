@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Promotion extends Model
 {
@@ -38,7 +39,9 @@ class Promotion extends Model
 
     public function findCodeByLockedFor(int $customerId)
     {
-        return $this->codes()->where('locked_for', $customerId)->first();
+        return $this->codes()->where('locked_for', $customerId)
+            ->where('locked_until', '>=', now())
+            ->first();
     }
 
 
@@ -67,7 +70,7 @@ class Promotion extends Model
     }
 
     //relationship
-    public function codes(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function codes(): HasMany
     {
         return $this->hasMany(PromotionCode::class);
     }

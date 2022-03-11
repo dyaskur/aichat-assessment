@@ -45,4 +45,13 @@ class PromotionCode extends Model
                           'claimed_for' => $user->id,
                       ]);
     }
+
+
+    public function unlock(): void
+    {
+        $this->update([
+                          'locked_for'   => null,
+                          'locked_until' => null,
+                      ]);
+    }
 }

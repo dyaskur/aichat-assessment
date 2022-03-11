@@ -34,8 +34,7 @@ class PromotionController extends Controller
 
             return response()->json(
                 [
-                    'message'   => 'Internal server error',
-                    'exception' => $e->getMessage(),
+                    'message' => env("APP_DEBUG") ? $e->getMessage() : 'Internal server error',
                 ],
                 500
             );
@@ -55,12 +54,24 @@ class PromotionController extends Controller
         }
         $code = $promotion->findCodeByLockedFor($customer->id);
 
+        if (!$code) {
+            return response()->json(
+                [
+                    'message' => 'Invalid/expired locked code, feel free to redeem the code (again)',
+                    "code"    => $request->code,
+                ],
+                422
+            );
+        }
 
         DB::beginTransaction();
         try {
             $isRecognized = $request->isRecognized();
-            $code->claimForCustomer($customer);
-
+            if ($isRecognized) {
+                $code->claimForCustomer($customer);
+            } else {
+                $code->unlock();
+            }
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
