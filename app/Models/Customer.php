@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use App\Helpers\Helper;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Http\Request;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class Customer extends Authenticatable
 {
@@ -73,6 +77,14 @@ class Customer extends Authenticatable
         return $this->hasMany(PromotionCode::class, 'locked_for')->where('locked_until', '>=', now());
     }
 
+    /**
+     * @return HasMany
+     */
+    public function recognizedPhotos(): HasMany
+    {
+        return $this->hasMany(CustomerRecognizedPhoto::class, 'customer_id');
+    }
+
     //custom method
 
     public function findLockedPromotion(Promotion $promotion): PromotionCode|null
@@ -88,5 +100,19 @@ class Customer extends Authenticatable
     public function getFullNameAttribute(): string
     {
         return $this->first_name.' '.$this->last_name;
+    }
+
+    public function uploadImage(UploadedFile $image): bool|string
+    {
+        $extension = $image->getClientOriginalExtension(); // getting image extension
+        $filePath  = Storage::putFileAs(
+            "photos/customers/{$this->id}",
+            $image,
+            $this->id.'_'.time().'.'.$extension
+        );
+
+        $this->recognizedPhotos()->create(['photo_path' => $filePath]);
+
+        return $filePath;
     }
 }

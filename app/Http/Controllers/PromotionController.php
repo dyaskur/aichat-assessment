@@ -11,6 +11,7 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class PromotionController extends Controller
 {
@@ -22,9 +23,7 @@ class PromotionController extends Controller
     {
         //find the active promotion with requested code
         $promotion = (new Promotion)->findByCode($request->code);
-        if (!$promotion) {
-            return response()->json(['message' => 'Invalid/expired promotion code'], 422);
-        }
+
         $customer = $request->customer();
 
         $isEligible = $promotion->eligibleCheck($customer);
@@ -38,7 +37,7 @@ class PromotionController extends Controller
 
             throw new FailResponse(
                   'Something is wrong, please try again later'
-                , 500
+                , 500, $e
             );
         }
 
@@ -55,12 +54,14 @@ class PromotionController extends Controller
         $customer  = $request->customer();
         $promotion = (new Promotion)->findByCode($request->code);
 
-        $code = $promotion->findCodeByLockedFor($customer->id);
+        $code     = $promotion->findCodeByLockedFor($customer->id);
+        $filepath = null;
         DB::beginTransaction();
         try {
             $isRecognized = $request->isRecognized();
             if ($isRecognized) {
                 $code->claimForCustomer($customer);
+                $filepath = $customer->uploadImage($request->photo);
             } else {
                 $code->unlock();
                 DB::commit();//unlock the code by set locked_for & locked_until to null
@@ -71,10 +72,12 @@ class PromotionController extends Controller
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
-
+            if ($filepath) {
+                Storage::delete($filepath);
+            }
             throw new FailResponse(
                   'Something is wrong, please try again later'
-                , 500
+                , 500, $e
             );
         }
 
