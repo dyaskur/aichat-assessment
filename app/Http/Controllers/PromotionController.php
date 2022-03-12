@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\FailResponse;
 use App\Http\Requests\PromotionCheckRequest;
 use App\Http\Requests\ValidatePhotoRequest;
 use App\Models\Promotion;
@@ -14,6 +15,9 @@ use Illuminate\Support\Facades\DB;
 class PromotionController extends Controller
 {
 
+    /**
+     * @throws FailResponse
+     */
     public function eligibleCheck(PromotionCheckRequest $request): JsonResponse
     {
         //find the active promotion with requested code
@@ -26,17 +30,15 @@ class PromotionController extends Controller
         $isEligible = $promotion->eligibleCheck($customer);
         DB::beginTransaction();
         try {
-            $promotionCode = $promotion->codes()->available()->lockForUpdate()->first();
+            $promotionCode = $promotion->lockAvailableCode();
             $promotionCode->lockForCustomer($customer);
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
 
-            return response()->json(
-                [
-                    'message' => env("APP_DEBUG") ? $e->getMessage() : 'Internal server error',
-                ],
-                500
+            throw new FailResponse(
+                  'Something is wrong, please try again later'
+                , 500
             );
         }
 
@@ -44,26 +46,16 @@ class PromotionController extends Controller
     }
 
     //
+
+    /**
+     * @throws FailResponse
+     */
     public function claim(ValidatePhotoRequest $request): JsonResponse
     {
         $customer  = $request->customer();
         $promotion = (new Promotion)->findByCode($request->code);
 
-        if (!$promotion) {
-            return response()->json(['message' => 'Invalid/expired promotion code', "code" => $request->code], 422);
-        }
         $code = $promotion->findCodeByLockedFor($customer->id);
-
-        if (!$code) {
-            return response()->json(
-                [
-                    'message' => 'Invalid/expired locked code, feel free to redeem the code (again)',
-                    "code"    => $request->code,
-                ],
-                422
-            );
-        }
-
         DB::beginTransaction();
         try {
             $isRecognized = $request->isRecognized();
@@ -71,16 +63,18 @@ class PromotionController extends Controller
                 $code->claimForCustomer($customer);
             } else {
                 $code->unlock();
+                DB::commit();//unlock the code by set locked_for & locked_until to null
+                throw new FailResponse(
+                    'Your photo validation is invalid, the booked code is released to other customers. but you can book it again'
+                );
             }
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
 
-            return response()->json(
-                [
-                    'message' => env("APP_DEBUG") ? $e->getMessage() : 'Internal server error',
-                ],
-                500
+            throw new FailResponse(
+                  'Something is wrong, please try again later'
+                , 500
             );
         }
 

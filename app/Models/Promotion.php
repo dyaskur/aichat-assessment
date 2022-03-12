@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Exceptions\FailResponse;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -31,17 +32,47 @@ class Promotion extends Model
     }
 
     //custom methods
+
+    /**
+     * @throws FailResponse
+     */
     public function findByCode($code)
     {
-        return $this->active()->where('code', $code)->first();
+        $code = $this->active()->where('code', $code)->first();
+        if (!$code) {
+            throw new FailResponse('Promotion code not found');
+        }
+
+        return $code;
     }
 
 
+    /**
+     * @throws FailResponse
+     */
     public function findCodeByLockedFor(int $customerId)
     {
-        return $this->codes()->where('locked_for', $customerId)
+        $code = $this->codes()->where('locked_for', $customerId)
             ->where('locked_until', '>=', now())
             ->first();
+
+        if (!$code) {
+            throw new FailResponse('Invalid/expired locked code, feel free to redeem the code (again)');
+        }
+
+        return $code;
+    }
+
+    /**
+     * @throws FailResponse
+     */
+    public function lockAvailableCode()
+    {
+        $code = $this->codes()->available()->lockForUpdate()->first();
+        if (!$code) {
+            throw new FailResponse('No available promotion codes');
+        }
+        return $code;
     }
 
 
