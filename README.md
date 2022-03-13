@@ -5,8 +5,8 @@ the [Pessimistic Locking](https://laravel.com/docs/9.x/queries#pessimistic-locki
 
 We have 2 main APIs:
 
-* [Check the Eligibility](API.md#checkTheElig) : `POST /api/voucher/check`
-* [Claim the Voucher Code](API.md#checkTheElig) : `POST /api/voucher/claim`
+* [Check the Eligibility](API.md#check-the-eligibility) : `POST /api/voucher/check`
+* [Claim the Voucher Code](API.md#claim-the-voucher-code) : `POST /api/voucher/claim`
 
 ####Capabilities:
 
@@ -36,10 +36,10 @@ From above diagram we assume that available voucher codes are 3, and we have 5 c
 * thread 3 will wait until thread 2 committed the query, then lock voucher code 3, 
 * after thread 3 committed, thread 4 & 5 will return fail because no voucher code is available.
 
-Theoretically, the above scenario can handle high concurrent visitor, but we need high performance database server.
+Theoretically, the above scenario can handle high concurrent visitor, but we need high performance server.
 
 Another alternative is to use **message queue** to handle the concurrency. If we use message queue, we can handle high concurrent visitor, but we need to set up a message queue server.
-I hope I have a chance to create another race condition solution using message queue.
+I hope I have a chance to create another race condition solution using message queue and other methods.
 
 ####Technical Requirement:
 
@@ -76,3 +76,12 @@ $ php artisan serve
 #if you want to run in production just set up on the web server or container(docker)
 
 ```
+
+For testing purpose we have some sample customer in the database.
+
+* Customer 1 (Eligible to claim voucher code): __eligible@customer.com__
+* Customer 2 (Eligible to claim voucher code): __eligible2@customer.com__
+* Customer 3 (Eligible to claim voucher code): __eligible3@customer.com__
+* Customer 4 (Not eligible because not enough transaction): __poor@customer.com__
+* Customer 5 (Not eligible because already redeemed code): __redeemed@customer.com__
+* More 1000 customers is generated in the database using factory.
