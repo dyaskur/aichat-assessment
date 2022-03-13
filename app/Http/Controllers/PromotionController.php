@@ -26,11 +26,15 @@ class PromotionController extends Controller
 
         $customer = $request->customer();
 
-        $isEligible = $promotion->eligibleCheck($customer);
+        $promotion->eligibleCheck($customer);
         DB::beginTransaction();
         try {
-            $promotionCode = $promotion->lockAvailableCode();
-            $promotionCode->lockForCustomer($customer);
+            $promotionCode = $promotion->lockAvailableCode($customer);
+            if ($request->sleep) { //for concurrent lock testing
+                //sleep for a while to simulate a long running process
+                sleep((int)$request->sleep);
+            }
+
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
@@ -41,7 +45,13 @@ class PromotionController extends Controller
             );
         }
 
-        return response()->json(['isEligible' => $isEligible, 'code' => $promotionCode]);
+        return response()->json(
+            [
+                'success' => true,
+                'message' => 'You eligible to claim voucher code by validate your photo',
+                'data'    => null,
+            ]
+        );
     }
 
     //
@@ -81,7 +91,15 @@ class PromotionController extends Controller
             );
         }
 
-        return response()->json(['is_recognized' => $isRecognized, 'code' => $code]);
+        return response()->json(
+            [
+                'status'  => true,
+                'message' => 'Congratulations, you have claimed your voucher code',
+                'data'    => [
+                    'code'          => $code->code,
+                ],
+            ]
+        );
     }
 
     //

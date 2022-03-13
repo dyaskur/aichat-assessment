@@ -30,6 +30,30 @@ class CustomerSeeder extends Seeder
                            ]
                     )
             );
+        $eligibleCustomer = Customer::factory()->create([
+                                                            'first_name' => 'Eligible2 Customer',
+                                                            'email'      => 'eligible2@customer.com',
+                                                        ]);
+        $eligibleCustomer->transactions()
+            ->saveMany(
+                PurchaseTransaction::factory(4)
+                    ->make([
+                               'total_spent' => rand(30, 60),
+                           ]
+                    )
+            );
+        $eligibleCustomer = Customer::factory()->create([
+                                                            'first_name' => 'Eligible3 Customer',
+                                                            'email'      => 'eligible3@customer.com',
+                                                        ]);
+        $eligibleCustomer->transactions()
+            ->saveMany(
+                PurchaseTransaction::factory(5)
+                    ->make([
+                               'total_spent' => rand(20, 32),
+                           ]
+                    )
+            );
 
         //create demo customer that not eligible for vouchers because not enough spent
 

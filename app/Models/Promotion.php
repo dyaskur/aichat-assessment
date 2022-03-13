@@ -66,10 +66,14 @@ class Promotion extends Model
     /**
      * @throws FailResponse
      */
-    public function lockAvailableCode()
+    public function lockAvailableCode($user, $expiryInMinutes = 10)
     {
-        $code = $this->codes()->available()->lockForUpdate()->first();
-        if (!$code) {
+        $code = $this->codes()->available()->limit(1)
+            ->lockForUpdate()->update([
+                                          'locked_for'   => $user->id,
+                                          'locked_until' => now()->addMinutes($expiryInMinutes),
+                                      ]);
+        if ($code == 0) {
             throw new FailResponse('No available promotion codes');
         }
         return $code;
@@ -95,6 +99,17 @@ class Promotion extends Model
         if ($this->max_redemption_per_user_count > 0 && $eligible) {
             $eligible = $customer->transactions()->hasPromotion($this->id)->count() <
                 $this->max_redemption_per_user_count;
+        }
+        if ($eligible) {
+            $eligible = $this->codes()->where(function($query) use ($customer) {
+                    $query->where('locked_for', $customer->id)
+                        ->where('locked_until', '>=', now());
+                })->orWhere('claimed_for', $customer->id)->count() == 0;
+        }
+
+        if (!$eligible) {
+            //todo: give reason why not eligible
+            throw new FailResponse('You are not eligible for this promotion');
         }
 
         return $eligible;

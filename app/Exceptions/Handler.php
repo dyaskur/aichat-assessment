@@ -57,6 +57,6 @@ class Handler extends ExceptionHandler
 
     protected function returnFailResponse(string $message, int $status): JsonResponse
     {
-        return response()->json(['success' => false, 'message' => $message], $status);
+        return response()->json(['success' => false, 'message' => $message, 'data' => null], $status);
     }
 }
