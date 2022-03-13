@@ -1,3 +1,10 @@
+#API DOCUMENTATION
+
+## Alternative API Documentation
+
+You may also check out the 
+[API Docs by Postman Documenter](https://documenter.getpostman.com/view/2743377/UVsJvm9U)
+
 ## Check the Eligibility
 
 We can use this API to check the eligibility of a customer for a given promotion.
