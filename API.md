@@ -1,4 +1,4 @@
-#API DOCUMENTATION
+# API DOCUMENTATION
 
 ## Alternative API Documentation
 
@@ -20,7 +20,7 @@ We can use this API to check the eligibility of a customer for a given promotion
 
 **POST Body**(JSON or Form Data) :
 
-* `code` : _string_ - Voucher code, Required
+* `code` : _string_ - Promotion Campaign code, Required
 * `customer_email` : _string_ - Customer Email, Optional (to bypass auth)
 
 Example Request 1:
@@ -99,7 +99,7 @@ We can use this API to claim the voucher code by upload photo to validate custom
 
 **POST Body**(Multipart Form Data) :
 
-* `code` : _string_ - Voucher code, Required
+* `code` : _string_ - Promotion Campaign code, Required
 * `photo` : _file_ - Photo file that need to be validated, Required
 * `customer_email` : _string_ - Customer Email, Optional (to bypass auth)
 

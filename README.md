@@ -1,4 +1,4 @@
-####Application description:
+### Application description:
 
 This application is a simple example of a laravel application that uses
 the [Pessimistic Locking](https://laravel.com/docs/9.x/queries#pessimistic-locking).
@@ -8,7 +8,7 @@ We have 2 main APIs:
 * [Check the Eligibility](API.md#check-the-eligibility) : `POST /api/voucher/check`
 * [Claim the Voucher Code](API.md#claim-the-voucher-code) : `POST /api/voucher/claim`
 
-####Capabilities:
+### Capabilities:
 
 * Promotion Campaigns rules is set up in the promotion table.(e.g campaign start/end date, minimum purchase amount, max redeem per customer,
   etc)
@@ -16,7 +16,7 @@ We have 2 main APIs:
 * Can handle high volume of requests depending on the server load (recommended use a load balancer and auto-scale)
 * Avoid the multiple allocation of the same voucher code using the Pessimistic concurrency control.
 
-####How does it work?
+### How does it work?
 
 This application uses the [Pessimistic Locking](https://laravel.com/docs/9.x/queries#pessimistic-locking).
 It's a technique that allows you to lock a row in a database table for a short period of time. So, you can not get the same voucher code until the table row is unlocked.
@@ -41,8 +41,9 @@ Theoretically, the above scenario can handle high concurrent visitor, but we nee
 Another alternative is to use **message queue** to handle the concurrency. If we use message queue, we can handle high concurrent visitor, but we need to set up a message queue server.
 I hope I have a chance to create another race condition solution using message queue and other methods.
 
-####Technical Requirement:
-
+### Technical Requirement:
+This application use Laravel 9 framework, and it's default dependency
+Here is the requirement: 
 - PHP >= 8.0.10
 - MySQL >= 8.0.0
 - BCMath PHP Extension
@@ -56,7 +57,7 @@ I hope I have a chance to create another race condition solution using message q
 - XML PHP Extension
 - Mysqli PHP Extension
 
-#### How to run
+### How to run
 
 ```bash
 
@@ -65,6 +66,11 @@ I hope I have a chance to create another race condition solution using message q
 # install Composer dependencies/packages
 $ composer install
 
+
+$ cp .env.example .env
+# then edit .env file to match your database configuration
+
+$ php artisan key:generate
 
 # Migrate and run seeding (do this every any update on the migration and the seeder)
 $ php artisan migrate
@@ -85,3 +91,11 @@ For testing purpose we have some sample customer in the database.
 * Customer 4 (Not eligible because not enough transaction): __poor@customer.com__
 * Customer 5 (Not eligible because already redeemed code): __redeemed@customer.com__
 * More 1000 customers is generated in the database using factory.
+
+For the campaign we have 1 example promotion campaign with below rules:
+* Campaign name is __Anniversary Promotion__
+* Campaign code is __anniversary__. This code need to be added in body to each API request.
+* Campaign start date is the current date when run the seeder. 
+* Complete 3 purchase transactions within the last 30 days. `min_transaction_count` is __3__ and `last_transaction_days` is __30__.
+* Total transactions equal or more than $100. `min_transaction_total` is __100__.
+* Each customer is allowed to redeem 1 cash voucher only. `max_redemption_per_user_count` is __1__.
