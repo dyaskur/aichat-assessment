@@ -25,6 +25,7 @@ return new class extends Migration {
     public function down()
     {
         Schema::table('promotion_codes', function(Blueprint $table) {
+            $table->dropForeign(["claimed_for"]);
             $table->dropColumn("claimed_for");
         });
     }
